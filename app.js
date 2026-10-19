@@ -51,8 +51,8 @@
   const DESIGN_HINTS = {
     "온도": "세 시험관에서 온도를 각각 어떻게 다르게 설정해야 할까요? 온도 이외의 조건은 모든 시험관에서 동일하게 유지해야 합니다.",
     "pH": "세 시험관에서 pH를 각각 어떻게 다르게 설정해야 할까요? pH 이외의 조건은 모든 시험관에서 동일하게 유지해야 합니다.",
-    "효소 농도": "세 시험관에서 아밀레이스 용액의 농도를 각각 어떻게 다르게 설정해야 할까요? 효소 농도 이외의 조건은 모든 시험관에서 동일하게 유지해야 합니다.",
-    "기질(녹말) 농도": "세 시험관에서 녹말 용액의 농도를 각각 어떻게 다르게 설정해야 할까요? 기질 농도 이외의 조건은 모든 시험관에서 동일하게 유지해야 합니다."
+    "효소 농도": "혼합 후 아밀레이스 농도를 다르게 만드는 방법을 생각해 보세요. 원액 농도를 다르게 하거나, 같은 원액의 투입량을 다르게 하고 증류수로 전체 부피를 맞출 수 있습니다. 나머지 조건은 동일하게 유지하세요.",
+    "기질(녹말) 농도": "혼합 후 녹말 농도를 다르게 만드는 방법을 생각해 보세요. 원액 농도를 다르게 하거나, 같은 원액의 투입량을 다르게 하고 증류수로 전체 부피를 맞출 수 있습니다. 나머지 조건은 동일하게 유지하세요."
   };
 
   const HINT_REFERENCE_ROWS = [
@@ -1288,15 +1288,7 @@
   }
 
   function compareConditions(conditions, factor) {
-    const check = evaluateExperimentDesign(factor, conditions);
-    if (check.valid) return `시험관 사이에서 달랐던 조건: ${factor}`;
-    if (check.changedLabels.length === 0) {
-      return "A·B·C의 주요 조건이 모두 같아 조건에 따른 차이를 비교하기 어렵습니다.";
-    }
-    if (check.changedLabels.length === 1) {
-      return `시험관 사이에서 달랐던 조건: ${check.changedLabels[0]}`;
-    }
-    return `시험관 사이에서 여러 조건이 달랐습니다: ${check.changedLabels.join(", ")}. 결과 차이를 한 가지 요인만의 영향으로 판단하기 어렵습니다.`;
+    return "A·B·C 시험관의 조건과 결과를 비교해 보세요. 탐구를 마칠 수 없다면 종료 단계에서 힌트를 요청할 수 있습니다.";
   }
 
   function repeatExperiment() {
@@ -1338,6 +1330,8 @@
       return { valid: false, type: "F", changedLabels: [], tubeKeys: missingReactants };
     }
 
+    // 농도 탐구는 입력값 하나가 아니라 혼합 후 최종 농도를 비교합니다.
+    // 같은 원액의 투입량과 증류수를 함께 조절한 올바른 희석 실험도 인정합니다.
     const factorKeys = {
       "온도": "temp",
       "pH": "ph",
@@ -1445,6 +1439,36 @@
       B: tube(2, 1, 1, 5, 50, 37, 7, 5),
       C: tube(2, 1, 1, 5, 100, 37, 7, 5)
     };
+    const controlledStarch = {
+      A: tube(2, 1, 1, 1, 100, 37, 7, 5),
+      B: tube(2, 1, 1, 3, 100, 37, 7, 5),
+      C: tube(2, 1, 1, 5, 100, 37, 7, 5)
+    };
+    const dilutedStarch = {
+      A: tube(1, 1, 3, 5, 100, 37, 7, 5),
+      B: tube(2, 1, 2, 5, 100, 37, 7, 5),
+      C: tube(3, 1, 1, 5, 100, 37, 7, 5)
+    };
+    const dilutedEnzyme = {
+      A: tube(2, 0.5, 1.5, 5, 100, 37, 7, 5),
+      B: tube(2, 1, 1, 5, 100, 37, 7, 5),
+      C: tube(2, 1.5, 0.5, 5, 100, 37, 7, 5)
+    };
+    const enzymeAmountWithoutVolumeControl = {
+      A: tube(2, 0.5, 1, 5, 100, 37, 7, 5),
+      B: tube(2, 1, 1, 5, 100, 37, 7, 5),
+      C: tube(2, 1.5, 1, 5, 100, 37, 7, 5)
+    };
+    const otherMixedConcentrationChanges = {
+      A: tube(2, 0.5, 1.5, 1, 100, 37, 7, 5),
+      B: tube(2, 1, 1, 3, 100, 37, 7, 5),
+      C: tube(2, 1.5, 0.5, 5, 100, 37, 7, 5)
+    };
+    const sameFinalStarchConcentration = {
+      A: tube(3, 1, 1, 1, 100, 37, 7, 5),
+      B: tube(1, 1, 3, 3, 100, 37, 7, 5),
+      C: tube(1, 1, 3, 3, 100, 37, 7, 5)
+    };
     const enzymeNegativeControl = {
       A: tube(2, 0, 2, 5, 100, 37, 7, 5),
       B: tube(2, 1, 1, 5, 100, 37, 7, 5),
@@ -1461,7 +1485,13 @@
       ["타당한 실험 1회와 해석", getFinishStatusForExperiments([validRecord]).complete],
       ["잘못된 실험 3회와 타당한 실험 1회", getFinishStatusForExperiments([invalidRecord, invalidRecord, invalidRecord, validRecord]).complete],
       ["온도 선택 후 pH만 변경", !evaluateExperimentDesign("온도", wrongTemperature).valid],
-      ["생성물 양과 무관한 효소 농도 설계", evaluateExperimentDesign("효소 농도", controlledEnzyme).valid],
+      ["1. 기질 원액 농도만 변화", evaluateExperimentDesign("기질(녹말) 농도", controlledStarch).valid],
+      ["2. 기질 투입량과 증류수로 희석", evaluateExperimentDesign("기질(녹말) 농도", dilutedStarch).valid],
+      ["3. 효소 원액 농도만 변화", evaluateExperimentDesign("효소 농도", controlledEnzyme).valid],
+      ["4. 효소 투입량과 증류수로 희석", evaluateExperimentDesign("효소 농도", dilutedEnzyme).valid],
+      ["5. 투입량 변화 후 전체 부피 불일치", !evaluateExperimentDesign("효소 농도", enzymeAmountWithoutVolumeControl).valid],
+      ["6. 조작변인 외 혼합 후 농도도 변화", !evaluateExperimentDesign("기질(녹말) 농도", otherMixedConcentrationChanges).valid],
+      ["7. 원액 조건은 달라도 혼합 후 농도 동일", !evaluateExperimentDesign("기질(녹말) 농도", sameFinalStarchConcentration).valid],
       ["음성 대조군은 최소 요건에서 제외", !evaluateExperimentDesign("효소 농도", enzymeNegativeControl).valid],
       ["온도 0℃는 유효한 설정", evaluateExperimentDesign("온도", validColdTemperature).valid],
       ["가설 내용과 무관한 판정", getFinishStatusForExperiments([{ ...validRecord, hypothesis: "실제 결과와 다른 가설" }]).complete],
@@ -1514,6 +1544,10 @@
       return `시험관 사이에서 여러 조건이 달랐습니다: ${hint.changedLabels.join(", ")}. 이 결과만으로는 한 가지 요인의 영향을 판단하기 어렵습니다.`;
     }
     if (hint.type === "D") {
+      if (hint.factor === "효소 농도" || hint.factor === "기질(녹말) 농도") {
+        const substance = hint.factor === "효소 농도" ? "아밀레이스" : "녹말";
+        return `세 시험관의 혼합 후 ${substance} 농도가 모두 같아요. 원액 농도를 바꾸거나, 용액 투입량과 증류수 양을 조절해 전체 부피를 같게 유지하면서 혼합 후 농도를 다르게 만들어 보세요.`;
+      }
       return "세 시험관에서 탐구하려는 조작변인의 값이 모두 같아요. 어떤 조건을 비교해야 가설을 확인할 수 있을까요?";
     }
     if (hint.type === "F") {
