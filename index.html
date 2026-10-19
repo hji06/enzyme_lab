@@ -1,0 +1,299 @@
+<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#f3f7fb">
+  <title>효소 가상실험실</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <div class="app">
+    <header class="top">
+      <div class="brand">🧪 효소 가상실험실</div>
+      <div class="save-box">
+        <span class="saved">이 기기에 자동 저장됨</span>
+        <button class="btn outline" id="resetAll" type="button">처음부터</button>
+      </div>
+    </header>
+
+    <nav class="steps" id="steps" aria-label="탐구 단계"></nav>
+
+    <main>
+      <section class="screen" data-screen="entry">
+        <div class="page-head narrow entry-head">
+          <span class="eyebrow">AMYLASE VIRTUAL LAB</span>
+          <h1>실험실 입장</h1>
+          <p>수업 코드와 학생 정보를 입력하고 효소 탐구를 시작하세요.</p>
+        </div>
+        <div class="card narrow entry-card">
+          <label class="field">
+            <span>수업 코드</span>
+            <select id="classCode" aria-label="수업 코드">
+              <option value="A1">A1</option>
+              <option value="A2">A2</option>
+              <option value="B1">B1</option>
+              <option value="B2">B2</option>
+              <option value="C1">C1</option>
+              <option value="C2">C2</option>
+            </select>
+          </label>
+          <div class="entry-student-grid">
+            <label class="field">
+              <span>학번</span>
+              <input id="studentNumber" type="text" inputmode="numeric" autocomplete="off" placeholder="예: 20315">
+            </label>
+            <label class="field">
+              <span>이름</span>
+              <input id="studentName" type="text" autocomplete="name" placeholder="예: 김과학">
+            </label>
+          </div>
+          <div class="notice">
+            탐구 중에는 이 기기에 자동 저장되며, 최종 제출을 누르면 교사용 Google Sheets에 전송됩니다.
+          </div>
+          <div class="nav-actions end">
+            <button class="btn primary" data-go="hypothesis" type="button">가설 설정으로</button>
+          </div>
+        </div>
+      </section>
+
+      <section class="screen" data-screen="hypothesis">
+        <div class="page-head">
+          <h1>가설 설정</h1>
+          <p>탐구할 요인을 하나 고르고 자신의 생각으로 작성하세요.</p>
+        </div>
+        <div class="inquiry-intro">
+          우리 침 속에는 녹말을 엿당 등의 당으로 분해하는 <strong>아밀레이스</strong>라는 효소가 있습니다.
+          아밀레이스가 녹말을 분해하는 정도는 어떤 조건에서 달라질까요?
+        </div>
+        <div class="card">
+          <div class="field-label">탐구할 조작변인</div>
+          <div class="factor-grid" id="factorGrid"></div>
+          <div class="review-message" id="hypothesisReview" hidden>
+            조작변인을 변경했습니다. 작성한 가설이 새 조작변인과 잘 맞는지 검토해 보세요.
+          </div>
+          <label class="field spaced">
+            <span>나의 가설</span>
+            <textarea id="hypothesis" placeholder="결과가 어떻게 달라질지와 그 까닭을 작성하세요."></textarea>
+            <small>정답·오답으로 자동 채점하지 않습니다. 틀린 가설이어도 계속할 수 있습니다.</small>
+          </label>
+          <div class="hint-actions">
+            <button class="btn secondary" id="hypothesisHint1" type="button">힌트 1 요청</button>
+            <button class="btn secondary" id="hypothesisHint2" type="button">힌트 2 요청</button>
+          </div>
+          <div id="hypothesisHints" aria-live="polite"></div>
+          <div class="nav-actions">
+            <button class="btn outline" data-go="entry" type="button">이전</button>
+            <button class="btn primary" data-go="design" type="button">실험 설계로</button>
+          </div>
+        </div>
+      </section>
+
+      <section class="screen" data-screen="design">
+        <div class="page-head">
+          <h1>실험 설계</h1>
+          <p>변인을 정리한 뒤 시험관 A·B·C의 조건을 계획하세요.</p>
+        </div>
+
+        <section class="card hypothesis-card">
+          <h2>나의 가설</h2>
+          <p id="designHypothesis"></p>
+        </section>
+
+        <section class="card section-gap">
+          <h2>변인 설정</h2>
+          <div class="variable-grid">
+            <label class="field">
+              <span>조작변인</span>
+              <textarea id="independent" placeholder="내가 다르게 할 조건"></textarea>
+            </label>
+            <label class="field">
+              <span>통제변인</span>
+              <textarea id="controlled" placeholder="같게 유지할 조건"></textarea>
+            </label>
+            <label class="field">
+              <span>종속변인</span>
+              <textarea id="dependent" placeholder="관찰할 결과"></textarea>
+            </label>
+          </div>
+          <small>서술한 내용은 자동 채점하지 않습니다.</small>
+        </section>
+
+        <div class="design-workspace section-gap">
+          <section class="card">
+            <div class="card-head">
+              <div>
+                <h2>실험 계획표</h2>
+                <p class="sub">값을 바꾸면 옆의 시험관 그림에 바로 반영됩니다.</p>
+              </div>
+            </div>
+            <div class="table-scroll">
+              <table class="plan-table" id="planTable"></table>
+            </div>
+            <div class="hint-actions section-gap-small">
+              <button class="btn secondary" id="designHint1" type="button">설계 힌트 1 요청</button>
+              <button class="btn secondary" id="designHint2" type="button">설계 힌트 2 요청</button>
+            </div>
+            <div id="designHints" aria-live="polite"></div>
+          </section>
+
+          <section class="card">
+            <h2>설계한 시험관</h2>
+            <p class="sub">용액 양은 높이로, 농도는 같은 색의 진하기로 비교합니다. 색 층은 설계를 돕는 교육용 표현이며 실제 혼합 상태를 뜻하지 않습니다.</p>
+            <div class="tube-grid design-tubes" id="designTubeGrid"></div>
+            <div class="legend">
+              <span><i class="swatch starch"></i>녹말</span>
+              <span><i class="swatch enzyme"></i>아밀레이스</span>
+              <span><i class="swatch water"></i>증류수</span>
+            </div>
+          </section>
+        </div>
+
+        <div class="nav-actions">
+          <button class="btn outline" data-go="hypothesis" type="button">이전</button>
+          <button class="btn primary" data-go="perform" type="button">실험 수행으로</button>
+        </div>
+      </section>
+
+      <section class="screen" data-screen="perform">
+        <div class="page-head">
+          <h1>실험 수행</h1>
+          <p>설계한 조건으로 준비된 시험관을 섞고 효소 반응을 진행하세요.</p>
+        </div>
+
+        <section class="card">
+          <div class="card-head">
+            <div>
+              <h2>준비된 시험관 A · B · C</h2>
+              <p class="sub">실험 설계표의 조건을 그대로 사용합니다.</p>
+            </div>
+            <button class="btn outline" id="showPlan" type="button">실험 계획표 보기</button>
+          </div>
+          <div class="tube-grid perform-tubes" id="performTubeGrid"></div>
+          <div class="legend">
+            <span><i class="swatch starch"></i>녹말</span>
+            <span><i class="swatch enzyme"></i>아밀레이스</span>
+            <span><i class="swatch water"></i>증류수</span>
+            <small id="mixtureNote">섞기 전에는 용액을 구분하기 위해 색 층으로 표시합니다.</small>
+          </div>
+        </section>
+
+        <section class="card section-gap prediction-card">
+          <label class="field">
+            <span>내가 예상한 실험 결과</span>
+            <textarea id="prediction" placeholder="실험을 시작하기 전에 A, B, C 시험관의 결과를 예상하세요."></textarea>
+            <small>예상은 자동 채점하지 않습니다. 예상 내용을 작성해야 결과 확인(베네딕트 반응)을 진행할 수 있습니다.</small>
+          </label>
+        </section>
+
+        <section class="card section-gap process-card">
+          <h2>실험 과정</h2>
+          <div class="process-steps">
+            <div><b>① 용액 섞기</b><button class="btn primary" id="mixTubes" type="button">용액 섞기</button></div>
+            <div><b>② 결과 검출</b><button class="btn primary" id="runBenedict" type="button" disabled>결과 확인(베네딕트 반응)</button></div>
+          </div>
+          <p class="sub">용액을 섞으면 설정한 온도·pH·반응 시간에 따른 효소 반응이 짧게 자동 진행됩니다. 이후 베네딕트 반응으로 생성된 당을 검출합니다.</p>
+          <div class="reaction-progress" id="reactionProgress" aria-live="polite"></div>
+        </section>
+
+        <section class="card section-gap benedict-area" id="benedictArea" hidden>
+          <h2>결과 확인(베네딕트 반응)</h2>
+          <p>반응액 일부를 검사용 시험관에 옮겨 베네딕트 용액을 넣고 가열합니다. 이 과정은 녹말 분해로 생성된 당을 검출하기 위한 과정입니다.</p>
+          <p class="science-statement">아밀레이스는 녹말을 분해하여 엿당 등의 당을 생성합니다.</p>
+          <div class="test-result-grid" id="benedictTubes"></div>
+          <div class="chart-wrap">
+            <h3>녹말 분해로 생성된 당의 상대량</h3>
+            <div class="line-chart" id="resultChart" aria-label="시험관 A, B, C의 시간에 따른 생성된 당 상대량 선그래프"></div>
+            <small>그래프 값은 실제 측정값이 아니라 조건에 따른 경향을 비교하기 위한 교육용 모형의 상대값입니다. 그래프의 세로축 범위는 실험 결과에 따라 자동 조정됩니다.</small>
+          </div>
+        </section>
+
+        <div class="nav-actions">
+          <button class="btn outline" data-go="design" type="button">이전</button>
+          <button class="btn primary" id="goResult" data-go="result" type="button" disabled>결과 해석으로</button>
+        </div>
+      </section>
+
+      <section class="screen" data-screen="result">
+        <div class="page-head">
+          <h1>결과 확인 및 해석</h1>
+          <p>예상과 관찰 결과를 비교하고, 실험 조건을 근거로 해석하세요.</p>
+        </div>
+        <div class="two-column">
+          <section class="card">
+            <div class="read-only-answer">
+              <h2>나의 가설</h2>
+              <p id="resultHypothesis"></p>
+            </div>
+            <div class="read-only-answer spaced"><h2>나의 예상</h2><p id="resultPrediction"></p></div>
+            <div id="resultRoundSummary" class="round-result"></div>
+          </section>
+          <section class="card">
+            <label class="field spaced">
+              <span>관찰 기록</span>
+              <textarea id="observation" placeholder="색 변화와 그래프에서 관찰한 내용을 작성하세요."></textarea>
+            </label>
+            <label class="field">
+              <span>결과 해석</span>
+              <textarea id="interpretation" placeholder="시험관별 실험 결과를 비교하고, 그 결과를 근거로 가설을 판단해 보세요."></textarea>
+            </label>
+            <div class="notice">이번 실험에서는 어떤 조건들이 달랐나요? 실험 결과의 차이가 한 가지 요인 때문이라고 판단할 수 있을까요?</div>
+            <small>학생이 직접 판단하여 작성합니다. 서술형 답변은 자동 채점하지 않습니다.</small>
+          </section>
+        </div>
+        <div class="notice finish-guidance" id="finishGuidance" hidden>
+          <p>아직 탐구를 마칠 조건이 충족되지 않았어요. 실험 과정과 결과를 다시 살펴보세요.</p>
+          <button class="btn secondary" id="finishHintButton" type="button">힌트 보기</button>
+          <div id="finishHintText" aria-live="polite"></div>
+        </div>
+        <div class="nav-actions">
+          <button class="btn outline" data-go="perform" type="button">이전</button>
+          <div class="control-actions">
+            <button class="btn secondary" id="repeatExperiment" type="button">다시 실험하기</button>
+            <button class="btn primary" id="finishInquiry" data-go="conclusion" type="button">탐구 종료하고 최종 결론으로</button>
+          </div>
+        </div>
+      </section>
+
+      <section class="screen" data-screen="conclusion">
+        <div class="page-head">
+          <h1>최종 결론</h1>
+          <p>가설과 기록을 돌아보고 자신의 말로 결론을 작성하세요.</p>
+        </div>
+        <section class="card">
+          <div id="experimentHistory" class="experiment-history"></div>
+          <div class="summary" id="summary"></div>
+          <label class="field spaced">
+            <span>나의 최종 결론</span>
+            <textarea id="conclusion" class="conclusion-input"></textarea>
+          </label>
+          <div class="notice">여러 실험 기록을 비교해 최종 결론을 작성하세요. 서술형 답변은 자동 채점하지 않습니다.</div>
+          <div id="submissionStatus" class="submit-status" role="status" aria-live="polite"></div>
+          <div class="nav-actions">
+            <button class="btn outline" data-go="result" type="button">이전</button>
+            <button class="btn primary" id="submitInquiry" type="button">최종 제출</button>
+          </div>
+        </section>
+      </section>
+    </main>
+
+    <footer>교육용 효소 반응 모형 · 최종 제출 전까지 기록은 이 기기의 브라우저에 자동 저장됨</footer>
+  </div>
+
+  <div class="overlay" id="planOverlay" role="dialog" aria-modal="true" aria-labelledby="planDialogTitle">
+    <div class="modal">
+      <div class="modal-head">
+        <h2 id="planDialogTitle">실험 계획표</h2>
+        <button class="close" id="closePlan" type="button" aria-label="닫기">×</button>
+      </div>
+      <div class="table-scroll">
+        <table class="review-table" id="planReviewTable"></table>
+      </div>
+      <p class="sub">이 조건이 실험 수행 단계의 시험관에 그대로 적용됩니다.</p>
+    </div>
+  </div>
+
+  <script src="config.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>
